@@ -13,17 +13,17 @@ stages:
   - build
   - release
 
+before_script:
+  - pip install -r requirements.dev.txt
+
 pylint:
   script:
-    - pip install -r requirements.dev.txt
     - pylint
 
 check-format:
   script:
-    - pip install -r requirements.dev.txt
     - black -t py310 -l 120 --check .
 
 test:
   script:
-    - pip install -r requirements.dev.txt
     - pytest -v
