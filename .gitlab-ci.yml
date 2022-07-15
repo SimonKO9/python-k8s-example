@@ -1,0 +1,29 @@
+image: python:3.10-slim
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+  paths:
+    - .cache/pip
+
+stages:
+  - check
+  - test
+  - build
+  - release
+
+pylint:
+  script:
+    - pip install -r requirements.dev.txt
+    - pylint
+
+check-format:
+  script:
+    - pip install -r requirements.dev.txt
+    - black -t py310 -l 120 --check .
+
+test:
+  script:
+    - pip install -r requirements.dev.txt
+    - pytest -v
