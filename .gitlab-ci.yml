@@ -2,6 +2,7 @@ image: python:3.10-slim
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PROJECT_NAME: "$CI_PROJECT_NAME"
 
 cache:
   paths:
@@ -9,21 +10,51 @@ cache:
 
 stages:
   - check
-  - test
   - build
-  - release
+  - deploy
 
 before_script:
   - pip install -r requirements.dev.txt
 
 pylint:
+  stage: check
   script:
     - pylint
 
 check-format:
+  stage: check
   script:
     - black -t py310 -l 120 --check .
 
 test:
+  stage: test
   script:
     - pytest -v
+
+build:
+  stage: build
+  services:
+    - docker:20.10.16-dind
+  image: docker:20.10.16
+  script:
+    - apk add curl
+    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - chmod +x kubectl
+    - >
+      aws ecr create-repository --repository-name $PROJECT_NAME 
+      --image-scanning-configuration scanOnPush=true 
+      --encryption-configuration encryptionType=AES256 || true
+    - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REPOSITORY_URL
+    - docker build . -t $ECR_REPOSITORY_URL/$PROJECT_NAME:$CI_COMMIT_SHORT_SHA
+    - docker push $ECR_REPOSITORY_URL/$PROJECT_NAME:$CI_COMMIT_SHORT_SHA
+
+deploy:
+  stage: deploy
+  image: alpine/k8s:1.21.13
+  script:
+    - aws eks update-kubeconfig --region eu-central-1 --name simon-eks-cluster
+    - helm upgrade python-k8s-example ./helm-chart --install --create-namespace -n dev --set image.tag=$CI_COMMIT_SHORT_SHA -f values.dev.yaml
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      when: on_success
+    - when: manual

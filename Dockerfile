@@ -21,6 +21,6 @@ RUN groupadd --gid $APP_USER_GID $APP_GROUPNAME \
 
 # Additional uvicorn configuration possible with env vars:
 # https://www.uvicorn.org/settings/#settings
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80", "--proxy-headers"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080", "--proxy-headers"]
 
-EXPOSE 80
+EXPOSE 8080

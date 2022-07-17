@@ -1,0 +1,48 @@
+replicaCount: 1
+
+image:
+  repository: 535376654616.dkr.ecr.eu-central-1.amazonaws.com/python-k8s-example
+  # tag must be provided dynamically in CI with --set flag for helm
+  pullPolicy: IfNotPresent
+
+podAnnotations: { }
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsUser: 1001
+  runAsGroup: 1001
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+  hosts:
+    - host: simonko.xyz
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: [ ]
+
+resources:
+  limits:
+    cpu: 400m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+
+healthcheck:
+  liveness:
+    path: /-/health
+  readiness:
+    path: /-/health
