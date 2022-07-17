@@ -16,6 +16,29 @@ This is by no means a copy&paste and ready-to-go setup, but definitely can act a
 - `requirements.dev.txt` defines package requirements for executing the pipeline; see more in the pipeline section,
 - `values.dev.yaml` contains values for helm chart used for deployment to dev environment.
 
+# Python application
+
+The app is built using [FastAPI](https://fastapi.tiangolo.com/), a framework designed for building HTTP APIs with Python that works with both sync and async libraries. It requires an ASGI server to run. This project leverages Uvicorn, but there are alternatives to consider depending on the requirements: https://fastapi.tiangolo.com/deployment/manually/#run-a-server-manually-uvicorn.
+
+It implements a simple API with two endpoints:
+- `/-/health` is intended to be used as a healthcheck and serves some extra diagnostics information,
+- `/api/echo` is a simple echo endpoint that requires a single query string parameter `text`. Returns what was sent to it back as a JSON.
+
+## Running locally
+
+There's a `run-local.sh` script that starts Uvicorn with hot reloading of the app. It can be accessed at `http://localhost:8000`.
+
+Sample calls:
+```shell
+$ curl "http://localhost:8000/api/echo?text=foo"
+{"text":"foo}
+```
+
+```shell
+$ curl http://localhost:8000/-/health
+{"status":"ok","debug":{"hostname":"mycomputer","ip":"127.0.1.1"}}
+```
+
 # Gitlab pipeline
 
 Gitlab pipeline defines the following stages: 
