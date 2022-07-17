@@ -5,6 +5,8 @@ This repository is an example of a Python (micro)service, packaged as a containe
 
 It is assumed that AWS and ECR is used, but the pipeline can be adjusted to support other registries fairly easily.
 
+This is by no means a copy&paste and ready-to-go setup, but definitely can act as a starting point for establishing a CI/CD solution.
+
 # Repository overview
 - `app` directory contains application code,
 - `test` directory contains tests,
@@ -30,11 +32,11 @@ Check makes sure the code conforms to defined standards. Defined checks include:
 
 The pipeline does not move to next stage unless all of the checks pass successfully.
 
-# Test
+## Test
 
 Executes automated tests. The pipeline does not allow for deployments if any of these fail.
 
-# Build
+## Build
 
 Packages the app as a Docker container and publishes it to ECR. The ECR registry is automatically created using project's name and can be accessed as
 `$ECR_REPOSITORY_URL/$PROJECT_NAME`.
@@ -50,9 +52,15 @@ See `Notes & ideas for improvement` section for alternatives to passing credenti
 
 By default `$CI_PROJECT_NAME` Gitlab-provided environment variable is used as a `$PROJECT_NAME`, but it can be changed in `.gitlab-ci.yml`.
 
-# Deploy
+## Deploy
 
-Deploys the application to Kubernetes with helm.
+Deploys the application to Kubernetes with helm. Leverages AWS CLI to generate kubeconfig that is further used by helm.
+
+The deployment is automatic on default branch (typically `main`) and manual form any other branch.
+
+On top of the environment variables required for build it expects the following:
+- EKS_CLUSTER_NAME - name of the EKS cluster,
+- K8S_NAMESPACE - namespace to deploy to, defaults to `dev` if not defined.
 
 
 # Notes & ideas for improvement
@@ -61,3 +69,4 @@ Deploys the application to Kubernetes with helm.
 2. Gitlab pipeline can be developed further to support multiple environments and different workflows, e.g. automatically deploy to dev environment from `main` (replaces `master` to build more inclusive work environments).
 3. Instead of managing AWS access credentials for CI/CD pipelines, one may decide to deploy a Gitlab worker within AWS (or even within Kubernetes) with a role having all the relevant permissions.
 4. Bake a Docker+kubectl docker image instead of installing kubectl on top of plain docker image in pipeline.
+5. Deployment is allowed from any branch (although it's manual for any other than default branch), but your organization may favor more strict rules. Rules must be adjusted in such cases.

@@ -52,8 +52,8 @@ deploy:
   stage: deploy
   image: alpine/k8s:1.21.13
   script:
-    - aws eks update-kubeconfig --region eu-central-1 --name simon-eks-cluster
-    - helm upgrade python-k8s-example ./helm-chart --install --create-namespace -n dev --set image.tag=$CI_COMMIT_SHORT_SHA -f values.dev.yaml
+    - aws eks update-kubeconfig --region $AWS_REGION --name $EKS_CLUSTER_NAME
+    - helm upgrade python-k8s-example ./helm-chart --install --create-namespace -n ${K8S_NAMESPACE:-dev} --set image.tag=$CI_COMMIT_SHORT_SHA -f values.dev.yaml
   rules:
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       when: on_success
